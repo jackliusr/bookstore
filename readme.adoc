@@ -1,0 +1,85 @@
+
+== Run this project
+
+[source, bash]
+----
+./mvn spring-boot:Run
+----
+
+
+== create resources 
+
+[source,bash]
+----
+# optional use netrc for this
+
+# greg:turnquist
+# create author
+curl -u greg:turnquist -i -X POST -H "Content-Type:application/json" \
+  --json '{"name":"Martin Fowler"}' \
+  http://localhost:8080/api/authors
+
+curl -u greg:turnquist -i -X POST -H "Content-Type:application/json" \
+  --json '{"name":"Will Larson"}' \
+  http://localhost:8080/api/authors
+
+# create a book
+curl -u greg:turnquist  -i -X POST -H "Content-Type:application/json"  \
+     --json '{"title":"Refactoring: Improving the Design of Existing Code (2nd Edition)", "isbn":"978-0134757599"}' \
+     http://localhost:8080/api/books
+
+# create a book
+curl -u greg:turnquist  -i -X POST -H "Content-Type:application/json"  \
+     --json '{"title":"Analysis Patterns: Reusable Object Models", "isbn":"978-0134186054"}' \
+     http://localhost:8080/api/books
+----
+
+== update resource 
+
+[source, bash]
+----
+#curl -u  oliver:gierke http://localhost:8080/api/authors
+
+# get author id
+export MARTIN_BOOKS_URL=$(curl -s -u  oliver:gierke http://localhost:8080/api/authors | jq --raw-output '._embedded.authors[0]._links.books.href')
+
+cat <<'EOF' >martin_fowler_book_uri.txt
+http://localhost:8080/api/books/978-0134757599
+http://localhost:8080/api/books/978-0134186054
+EOF
+
+
+# associate books with an author
+curl -u greg:turnquist  -i -X PUT -H "Content-Type:text/uri-list" \
+  --data-binary @martin_fowler_book_uri.txt \
+  $MARTIN_BOOKS_URL
+  
+----
+
+== Find books by title and/or author (Exact Match) 
+
+[source, bash]
+----
+curl -u greg:turnquist  http://localhost:8080/api/authors
+
+# find by title
+curl -u greg:turnquist  http://localhost:8080/api/books/search/byTitle?title=Refactoring:%20Improving%20the%20Design%20of%20Existing%20Code%20(2nd%20Edition)
+
+# find by author name
+curl -u greg:turnquist http://localhost:8080/api/books/search/byAuthorName?name=Martin%20Fowler
+----
+
+== test delete on protected resources
+[sourc,bash]
+----
+
+curl -u  oliver:gierke http://localhost:8080/api/books
+curl -u  oliver:gierke  -i -X DELETE http://localhost:8080/api/books/978-0134757599
+curl -u  greg:turnquist  -i -X DELETE http://localhost:8080/api/books/978-0134757599
+
+curl -u greg:turnquist http://localhost:8080/api/authors/14/books
+curl -u greg:turnquist http://localhost:8080/api/books/978-0134757599
+# httpie
+
+http://localhost:8080/app/user/login
+----
